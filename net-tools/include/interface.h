@@ -77,6 +77,7 @@ extern char * get_name(char *name, char *p);
 extern void ife_print(struct interface *ptr);
 
 extern int ife_short;
+extern int ife_yaml;
 
 extern const char *if_port_text[][4];
 
