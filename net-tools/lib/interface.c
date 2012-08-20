@@ -994,12 +994,12 @@ void ife_print_yaml(struct interface *ptr)
 	hw = get_hwntype(-1);
 
     printf(_("%s:\n"), ptr->name);
-    printf(_("  \"link encapsulation\": %s\n"), hw->title);
+    printf(_("  link encapsulation: %s\n"), hw->title);
     /* For some hardware types (eg Ash, ATM) we don't print the 
        hardware address if it's null.  */
     if (hw->print != NULL && (! (hw_null_address(hw, ptr->hwaddr) &&
 				  hw->suppress_null_addr)))
-	printf(_("  \"hardware address\": %s\n"), hw->print(ptr->hwaddr));
+	printf(_("  hardware address: %s\n"), hw->print(ptr->hwaddr));
 #ifdef IFF_PORTSEL
     if (ptr->flags & IFF_PORTSEL) {
 	printf(_("  media: %s\n"), if_port_text[ptr->map.port][0]);
@@ -1011,15 +1011,15 @@ void ife_print_yaml(struct interface *ptr)
 
 #if HAVE_AFINET
     if (ptr->has_ip) {
-	printf(_("  \"%s addr\": %s\n"), ap->name,
+	printf(_("  %s:\n    address: %s\n"), ap->name,
 	       ap->sprint(&ptr->addr, 1));
 	if (ptr->flags & IFF_POINTOPOINT) {
-	    printf(_("  \"P-t-P\": %s\n"), ap->sprint(&ptr->dstaddr, 1));
+	    printf(_("    P-t-P: %s\n"), ap->sprint(&ptr->dstaddr, 1));
 	}
 	if (ptr->flags & IFF_BROADCAST) {
-	    printf(_("  broadcast: %s\n"), ap->sprint(&ptr->broadaddr, 1));
+	    printf(_("    broadcast: %s\n"), ap->sprint(&ptr->broadaddr, 1));
 	}
-	printf(_("  netmask: %s\n"), ap->sprint(&ptr->netmask, 1));
+	printf(_("    netmask: %s\n"), ap->sprint(&ptr->netmask, 1));
     }
 #endif
 
@@ -1036,9 +1036,9 @@ void ife_print_yaml(struct interface *ptr)
 			addr6p[0], addr6p[1], addr6p[2], addr6p[3],
 			addr6p[4], addr6p[5], addr6p[6], addr6p[7]);
 		inet6_aftype.input(1, addr6, (struct sockaddr *) &sap);
-		printf(_("  \"inet6 addr\": %s/%d\n"),
+		printf(_("  inet6:\n    address: %s/%d\n"),
 		 inet6_aftype.sprint((struct sockaddr *) &sap, 1), plen);
-		printf(_("  scope:\n    id: 0x%x\n    type: "), scope);
+		printf(_("    scope:\n      id: 0x%x\n      type: "), scope);
 		switch (scope) {
 		case 0:
 		    printf(_("global"));
@@ -1068,19 +1068,20 @@ void ife_print_yaml(struct interface *ptr)
 #if HAVE_AFIPX
     if (ipxtype == NULL)
 	ipxtype = get_afntype(AF_IPX);
-
     if (ipxtype != NULL) {
+	if (ptr->has_ipx_bb || ptr->has_ipx_sn || ptr->has_ipx_e3 || ptr->has_ipx_e2)
+	    printf(_("  \"ipx/ethernet address\":\n"));
 	if (ptr->has_ipx_bb)
-	    printf(_("          IPX/Ethernet II addr:%s\n"),
+	    printf(_("    II: %s\n"),
 		   ipxtype->sprint(&ptr->ipxaddr_bb, 1));
 	if (ptr->has_ipx_sn)
-	    printf(_("          IPX/Ethernet SNAP addr:%s\n"),
+	    printf(_("    SNAP: %s\n"),
 		   ipxtype->sprint(&ptr->ipxaddr_sn, 1));
 	if (ptr->has_ipx_e2)
-	    printf(_("          IPX/Ethernet 802.2 addr:%s\n"),
+	    printf(_("    \"802.2\": %s\n"),
 		   ipxtype->sprint(&ptr->ipxaddr_e2, 1));
 	if (ptr->has_ipx_e3)
-	    printf(_("          IPX/Ethernet 802.3 addr:%s\n"),
+	    printf(_("    \"802.3\": %s\n"),
 		   ipxtype->sprint(&ptr->ipxaddr_e3, 1));
     }
 #endif
@@ -1144,10 +1145,8 @@ void ife_print_yaml(struct interface *ptr)
 	printf(_("  outfill: %d\n  keepalive:%d\n"),
 	       ptr->outfill, ptr->keepalive);
 #endif
-    //printf("\n");
 
     /* If needed, display the interface statistics. */
-
     if (ptr->statistics_valid) {
 	/* XXX: statistics are currently only printed for the primary address,
 	 *      not for the aliases, although strictly speaking they're shared
@@ -1191,22 +1190,19 @@ void ife_print_yaml(struct interface *ptr)
 	       (unsigned long)(short_tx % 10));
     }
 
-    if ((ptr->map.irq || ptr->map.mem_start || ptr->map.dma ||
-	 ptr->map.base_addr)) {
-	printf("          ");
+    if ((ptr->map.irq || ptr->map.mem_start || ptr->map.dma || ptr->map.base_addr)) {
+	printf("  device:\n");
 	if (ptr->map.irq)
-	    printf(_("Interrupt:%d "), ptr->map.irq);
+	    printf(_("    interrupt: %d\n"), ptr->map.irq);
 	if (ptr->map.base_addr >= 0x100)	/* Only print devices using it for
 						   I/O maps */
-	    printf(_("Base address:0x%x "), ptr->map.base_addr);
+	    printf(_("    base address: 0x%x\n"), ptr->map.base_addr);
 	if (ptr->map.mem_start) {
-	    printf(_("Memory:%lx-%lx "), ptr->map.mem_start, ptr->map.mem_end);
+	    printf(_("    memory: %lx-%lx\n"), ptr->map.mem_start, ptr->map.mem_end);
 	}
 	if (ptr->map.dma)
-	    printf(_("DMA chan:%x "), ptr->map.dma);
-	printf("\n");
+	    printf(_("    dma: %x\n"), ptr->map.dma);
     }
-    //printf("\n");
 }
 
 void ife_print(struct interface *i)
